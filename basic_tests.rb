@@ -1,0 +1,72 @@
+require_relative 'simple_worker_unit_test_base'
+require 'active_support/core_ext'
+
+# bumpasdf
+class BasicTests < SimpleWorkerUnitTestBase
+
+  attr_accessor :config
+  merge_worker 'one_line_worker', 'OneLineWorker'
+
+  def test_for_truth
+    assert true
+  end
+
+  def test_fail
+    assert false, "dang"
+  end
+
+  def test_exception
+    raise "dang exception"
+  end
+
+  def test_queue
+    worker = OneLineWorker.new
+    worker.queue
+    status = worker.wait_until_complete
+    log status
+    assert status['status'] == 'complete'
+    log worker.get_log
+
+  end
+
+  def test_schedule
+    tr = OneLineWorker.new
+    start_date = 15.seconds.from_now
+    response_hash = tr.schedule(:start_at => start_date, :end_at=>start_date + 1.minutes, :priority=>2)
+    puts 'response_hash=' + response_hash.inspect
+    assert response_hash, "Couldn't get response"
+    if response_hash
+      assert response_hash["schedule_id"], "Wrong response code"
+      status = wait_for_task(:schedule_id=>response_hash["schedule_id"])
+      assert status, "Scheduled task wasn't executed"
+      assert status["status"] == "complete", "wrong task status"
+      tasks = SimpleWorker.service.get_schedules.collect { |schedule| schedule["schedule_id"] }
+      assert tasks.include?(response_hash["schedule_id"]), "Response should contains schedule id"
+    end
+  end
+
+
+  def wait_for_task(params={})
+    tries = 0
+    status = nil
+    sleep 1
+    while  tries < 60
+      status = status_for(params)
+      puts 'status=' + status.inspect + ' for ' + (params.inspect)
+      if status["status"] == "complete" || status["status"] == "error"
+        break
+      end
+      sleep 2
+    end
+    status
+  end
+
+  def status_for(ob)
+    if ob.is_a?(Hash)
+      ob[:schedule_id] ? SimpleWorker.service.schedule_status(ob[:schedule_id]) : SimpleWorker.service.status(ob[:task_id])
+    else
+      ob.status
+    end
+  end
+
+end
