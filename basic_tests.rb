@@ -11,13 +11,13 @@ class BasicTests < SimpleWorkerUnitTestBase
     assert true
   end
 
-  def test_fail
-    assert false, "dang"
-  end
-
-  def test_exception
-    raise "dang exception"
-  end
+  # for trying failures
+#  def test_fail
+#    assert false, "dang"
+#  end
+#  def test_exception
+#    raise "dang exception"
+#  end
 
   def test_queue
     worker = OneLineWorker.new
