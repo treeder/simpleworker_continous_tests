@@ -19,6 +19,9 @@ suite_worker.config = @config
 suite_worker.add('basic_tests', 'BasicTests', @config)
 suite_worker.add('db_tests', 'DbTests', @config)
 suite_worker.setup
-suite_worker.queue
-status = suite_worker.wait_until_complete
-p status
+
+suite_worker.schedule(:start_at=>Time.now, :run_every=>3600)
+
+#suite_worker.queue
+#status = suite_worker.wait_until_complete
+#p status
