@@ -1,7 +1,7 @@
 require_relative 'simple_worker_unit_test_base'
 require 'active_support/core_ext'
 
-# bumpasdf
+# bumpasdfasdf
 class BasicTests < SimpleWorkerUnitTestBase
 
   attr_accessor :config
