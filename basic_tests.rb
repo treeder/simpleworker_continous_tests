@@ -45,6 +45,14 @@ class BasicTests < SimpleWorkerUnitTestBase
     end
   end
 
+  def test_timeout
+    worker = OneLineWorker.new
+    worker.sleep_time=40
+    worker.queue(:timeout=>20)
+    status = wait_for_task(worker)
+    assert status["duration"] < 30000, "Timeout doesn't work"
+  end
+
 
   def wait_for_task(params={})
     tries = 0
@@ -53,7 +61,7 @@ class BasicTests < SimpleWorkerUnitTestBase
     while  tries < 60
       status = status_for(params)
       puts 'status=' + status.inspect + ' for ' + (params.inspect)
-      if status["status"] == "complete" || status["status"] == "error"
+      if status["status"] == "complete" || status["status"] == "error"|| status["status"] == "killed"
         break
       end
       sleep 2
