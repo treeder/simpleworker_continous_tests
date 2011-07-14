@@ -45,6 +45,24 @@ class BasicTests < SimpleWorkerUnitTestBase
     end
   end
 
+  def test_cancel_schedule
+    tr = OneLineWorker.new
+    start_date = Time.now.tomorrow
+    response_hash = tr.schedule(:start_at => start_date, :end_at=>start_date + 1.minutes, :priority=>1)
+    puts 'response_hash=' + response_hash.inspect
+    assert response_hash, "Couldn't get response"
+    sleep 1
+    if response_hash
+      schedule_id=response_hash["schedule_id"]
+      assert schedule_id, "Wrong response code"
+      response_hash = SimpleWorker.service.cancel_schedule(schedule_id)
+      sleep 2
+      assert (response_hash["schedule_id"]==tr.schedule_id), ("Wrong response,should contains id, #{response_hash.inspect}")
+      assert (tr.status["status"]=='cancelled'), "Wrong status,current status #{tr.status}"
+    end
+  end
+
+
   def test_timeout
     worker = OneLineWorker.new
     worker.sleep_time=40
